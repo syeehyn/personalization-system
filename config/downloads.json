@@ -1,0 +1,4 @@
+{
+    "url": "http://files.grouplens.org/datasets/movielens/ml-latest.zip",
+    "fp": "./downloads/"
+}
