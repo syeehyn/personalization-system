@@ -11,3 +11,4 @@ ipython
 bokeh
 pyspark
 tqdm
+libhdfs3

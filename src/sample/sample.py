@@ -3,6 +3,14 @@ import pyspark.sql.functions as F
 import pyspark.sql.types as T
 
 def sampling(ratings, op, num_items, num_users):
+    """[summary]
+
+    Args:
+        ratings ([type]): [description]
+        op ([type]): [description]
+        num_items ([type]): [description]
+        num_users ([type]): [description]
+    """    
     rating_user_count = ratings.groupby('userId').agg(
             F.count(F.col('movieId')).alias('movie_count')
     )

@@ -4,6 +4,11 @@ import psutil
 NUM_WORKER = psutil.cpu_count(logical = False)
 
 def Spark():
+    """[summary]
+
+    Returns:
+        [type]: [description]
+    """    
     conf_spark = SparkConf().set("spark.driver.host", "127.0.0.1")
     sc = SparkContext(conf = conf_spark)
     spark = SparkSession(sc)
