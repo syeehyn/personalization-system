@@ -2,36 +2,49 @@ import pyspark.ml as M
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 
-def sampling(ratings, op, num_items, num_users):
-    """[summary]
-
-    Args:
-        ratings ([type]): [description]
-        op ([type]): [description]
-        num_items ([type]): [description]
-        num_users ([type]): [description]
-    """    
-    rating_user_count = ratings.groupby('userId').agg(
-            F.count(F.col('movieId')).alias('movie_count')
-    )
-    rating_item_count = ratings.groupby('movieId').agg(
-                F.count(F.col('userId')).alias('user_count')
-    )
-    userid = rating_user_count.sort(F.col('movie_count').desc()).limit(num_users)
-    itemid = rating_item_count.sort(F.col('user_count').desc()).limit(num_items)
-    sample = ratings.join(userid, ratings.userId == userid.userId, 'inner')\
-                .select(ratings.userId, ratings.movieId, ratings.rating)\
-                .join(itemid, ratings.movieId == itemid.movieId, 'inner')\
-                .select(ratings.userId, ratings.movieId, ratings.rating)
-    stringIndexer = M.feature.StringIndexer(inputCol='userId', outputCol='userId_indx')
-    model = stringIndexer.fit(sample)
-    sample = model.transform(sample)
-    stringIndexer = M.feature.StringIndexer(inputCol='movieId', outputCol='movieId_indx')
-    model = stringIndexer.fit(sample)
-    sample = model.transform(sample)
-    sample = sample.select('userId', 'movieId', \
-                            F.col('userId_indx').cast(T.IntegerType()),
-                            F.col('movieId_indx').cast(T.IntegerType()),
-                            'rating')\
-                    .orderBy(['userId_indx', 'movieId_indx'])
-    sample.coalesce(1).write.csv(path=op, compression='gzip', mode='overwrite', header = True)
+def sampling(ratings, min_user, min_movie, user_threshold, movie_threshold, random_seed):
+    userid_filter = ratings.groupby('userId')\
+        .agg(F.count(F.col('movieId'))\
+                    .alias('count'))\
+        .where(F.col('count') >= user_threshold)
+    movieid_filter = ratings.groupby('movieId')\
+            .agg(F.count(F.col('userId'))\
+                        .alias('count'))\
+            .where(F.col('count') >= movie_threshold)
+    subset = ratings.join(userid_filter,
+                            ratings.userId == userid_filter.userId)\
+                        .select(ratings.userId, ratings.movieId, ratings.rating)\
+                        .join(movieid_filter,
+                            ratings.movieId == movieid_filter.movieId)\
+                        .select(ratings.userId, ratings.movieId, ratings.rating).persist()
+    frac = .001
+    frac_incr = 2
+    cnt_user = 0
+    cnt_movie = 0
+    while cnt_user < min_user or cnt_movie < min_movie:
+        frac *= frac_incr
+        sample = subset.sample(fraction=frac, seed = random_seed)
+        userid_filter = sample.groupby('userId')\
+                .agg(F.count(F.col('movieId'))\
+                            .alias('count'))\
+                .where(F.col('count') >= user_threshold)
+        movieid_filter = sample.groupby('movieId')\
+                .agg(F.count(F.col('userId'))\
+                            .alias('count'))\
+            .where(F.col('count') >= movie_threshold)
+        sample = sample.join(userid_filter,
+                            sample.userId == userid_filter.userId)\
+                        .select(sample.userId, sample.movieId, sample.rating)\
+                        .join(movieid_filter,
+                            sample.movieId == movieid_filter.movieId)\
+                        .select(sample.userId, sample.movieId, sample.rating)
+        cnt_user = sample.select('userId').distinct().count()
+        cnt_movie = sample.select('movieId').distinct().count()
+        print(f'''
+                with frac = {frac},
+                {cnt_user} users rated at least {user_threshold} movies,
+                {cnt_movie} movies are rated by at least {movie_threshold} users.
+                ''')
+    subset.unpersist()
+    print(f'final sample has {cnt_user} users and {cnt_movie} movies')
+    return sample

@@ -1,5 +1,8 @@
 {
-    "num_items": 1000,
-    "num_users": 20000,
-    "op": "./data/sample"
+    "min_items": 1000,
+    "min_users": 20000,
+    "user_threshold": 5,
+    "item_threshold": 100,
+    "op": "./data/raw",
+    "random_seed": 0
 }
