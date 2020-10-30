@@ -8,7 +8,7 @@ from tqdm import tqdm
 
 cast_int = lambda df: df.select([F.col(c).cast('int') for c in df.columns])
 
-def cross_validate_als(training_set, test_set, valid_ratio, maxIter, regParam, rank, seed):
+def cross_validate_als(training_set, test_set, valid_ratio, regParam, rank, seed):
     training, test = cast_int(training_set), cast_int(test_set)
     print(f'''
         training set num of rows {training.count()},
@@ -18,21 +18,20 @@ def cross_validate_als(training_set, test_set, valid_ratio, maxIter, regParam, r
         test set num of users {test.select('userId').distinct().count()},
         test set num of movies {test.select('movieId').distinct().count()},
         ''')
-    param_list = [(i, j, k) for i in maxIter for j in regParam for k in rank]
+    param_list = [(i, j) for i in regParam for j in rank]
     _training, _validation = training.randomSplit([1-valid_ratio, valid_ratio], seed = seed)
     evaluator=RegressionEvaluator(metricName="rmse", labelCol="rating",
                                 predictionCol="prediction")
     rmses = []
-    for i,j,k in tqdm(param_list):
+    for i,j in tqdm(param_list):
         als = ALS(userCol="userId", 
                 itemCol="movieId", 
                 ratingCol="rating",
                 coldStartStrategy="drop", 
                 nonnegative=True,
-                maxIter=i,
-                regParam=j,
+                regParam=i,
                 seed=seed,
-                rank=k)
+                rank=j)
         model = als.fit(_training)
         rmses.append(evaluator.evaluate(model.transform(_validation)))
     

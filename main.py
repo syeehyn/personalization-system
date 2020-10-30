@@ -46,7 +46,6 @@ def main(targets):
             cv_result = pd.Series(cross_validate_als(train, 
                                             test, 
                                             ALS['valid_ratio'], 
-                                            ALS['maxIter'],
                                             ALS['regParam'],
                                             ALS['rank'],
                                             ALS['seed']), name='rmse')\
