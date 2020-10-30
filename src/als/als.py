@@ -6,7 +6,8 @@ from pyspark.ml.evaluation import RegressionEvaluator
 from pyspark.ml.tuning import ParamGridBuilder, TrainValidationSplit
 from tqdm import tqdm
 
-cast_int = lambda df: df.select([F.col(c).cast('int') for c in df.columns])
+cast_int = lambda df: df.select([F.col(c).cast('int') for c in ['userId', 'movieId']] + \
+                                [F.col('rating').cast('float')])
 
 def cross_validate_als(training_set, test_set, valid_ratio, regParam, rank, seed):
     training, test = cast_int(training_set), cast_int(test_set)
