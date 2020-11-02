@@ -1,51 +1,20 @@
 from scipy import sparse
 import numpy as np
-import pandas as pd
 from tqdm import tqdm
-import pyspark.ml as M
 import pyspark.sql.functions as F
-import pyspark.sql.types as T
-from pyspark.sql import SQLContext
 import warnings
+from .. import indexTransformer
 warnings.filterwarnings("ignore")
-cast_int = lambda df: df.select([F.col(c).cast('int') for c in ['userId', 'movieId']] + \
-                                [F.col('rating').cast('float')])
-
-class indexTransformer():
-    def __init__(self, usercol='userId', itemcol='movieId'):
-        self.usercol = usercol
-        self.itemcol = itemcol
-        self.u_indxer =  M.feature.StringIndexer(inputCol=usercol, 
-                                                outputCol=usercol+'_idx', 
-                                                handleInvalid = 'skip')
-        self.i_indxer = M.feature.StringIndexer(inputCol=itemcol, 
-                                                outputCol=itemcol+'_idx', 
-                                                handleInvalid = 'skip')
-        self.X = None
-    def fit(self, X):
-        self.X = X
-        self.u_indxer = self.u_indxer.fit(self.X)
-        self.i_indxer = self.i_indxer.fit(self.X)
-        return
-    def transform(self, X):
-        X_ = self.u_indxer.transform(X)
-        X_ = self.i_indxer.transform(X_)
-        return self._cast_int(X_).orderBy([self.usercol+'_idx', self.itemcol+'_idx'])
-    
-    def fit_transform(self, X):
-        self.fit(X)
-        return self.transform(X)
-    
-    def _cast_int(self, X):
-        return X.select([F.col(c).cast('int') for c in X.columns])
-
 class Memory_based_CF():
-    def __init__(self, spark, base, usercol='userId', itemcol='movieId'):
+    def __init__(self, spark, base, usercol='userId', itemcol='movieId', ratingcol='rating'):
         self.base = base
         self.usercol = usercol
         self.itemcol = itemcol
+        self.ratingcol = ratingcol
         self.spark = spark
+        self.X = None
         self.idxer = None
+        self.similarity_matrix = None
     def fit(self, _X):
         X = self._preprocess(_X, True)
         self.X = X
@@ -65,14 +34,17 @@ class Memory_based_CF():
             else:
                 val = mu[i] + nom/denom          
             preds.append(val)
-        df = self.idxer.transform(_X).select(self.usercol, self.itemcol, 'rating').toPandas()
+        df = self.idxer.transform(_X).select(self.usercol, self.itemcol, self.ratingcol).toPandas()
         df['prediction'] = preds
         return self.spark.createDataFrame(df)
-    def _preprocess(self, _X, fit):
+    def _preprocess(self, X, fit):
+        cast_int = lambda df: df.select([F.col(c).cast('int') for c in [self.usercol, self.itemcol]] + \
+                                [F.col(self.ratingcol).cast('float')])
+        _X = cast_int(X)
         if fit:
             self.idxer = indexTransformer(self.usercol, self.itemcol)
             self.idxer.fit(_X)
-            X = self.idxer.transform(_X).select(self.usercol+'_idx', self.itemcol+'_idx', 'rating').toPandas().values
+            X = self.idxer.transform(_X).select(self.usercol+'_idx', self.itemcol+'_idx', self.ratingcol).toPandas().values
             if self.base == 'user':
                 row = X[:, 0]
                 col = X[:, 1]
