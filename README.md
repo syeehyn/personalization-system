@@ -1,6 +1,8 @@
 # IEOR 4571 Homework 2
 
-This repository contains library code and experimental of Homework 2 of IEOR 4571 course in Columbia University
+This repository contains library code and experimental of Homework 2 of IEOR 4571 course in Columbia University.
+
+[Final Report](./notebook/final_report.ipynb)
 
 ----
 
