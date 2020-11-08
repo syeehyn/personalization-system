@@ -1,6 +1,5 @@
-def train_test_split(data, seed):
+def train_test_split(data, seed, split):
     train = {}
     test = {}
-    for i in [.25, .5, .75]:
-        train[i], test[1-i] = data.randomSplit([i, 1-i], seed=seed)
+    train, test = data.randomSplit([split, 1-split], seed=seed)
     return train, test

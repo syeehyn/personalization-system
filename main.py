@@ -33,11 +33,11 @@ def main(targets):
     if 'train-test-split' in targets:
         spark = Spark()
         data = loading(spark, SAMPLE['op'])['sample']
-        train, test = train_test_split(data, SPLIT['seed'])
-        for i in [.25, .5, .75]:
-            train[i].toPandas().to_csv(osp.join(SPLIT['op'],
+        for i in SPLIT['splits']:
+            train, test = train_test_split(data, SPLIT['seed'], i)
+            train.toPandas().to_csv(osp.join(SPLIT['op'],
                                         'train_' + str(i) + '_' + str(1-i)+'.csv'), index=False)
-            test[1-i].toPandas().to_csv(osp.join(SPLIT['op'],
+            test.toPandas().to_csv(osp.join(SPLIT['op'],
                                         'test_' + str(i) + '_' + str(1-i)+'.csv'), index=False)
     if 'cv-als' in targets:
         spark = Spark()
