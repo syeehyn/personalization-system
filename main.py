@@ -23,8 +23,8 @@ def main(targets):
         spark =Spark()
         ratings = loading(spark, DOWNLOAD['fp'])['ratings']
         sample = sampling(ratings,
-                        SAMPLE['min_users'],
-                        SAMPLE['min_items'],
+                        SAMPLE['num_user'],
+                        SAMPLE['num_movie'],
                         SAMPLE['user_threshold'],
                         SAMPLE['item_threshold'],
                         SAMPLE['random_seed'])

@@ -1,6 +1,6 @@
 {
-    "min_items": 1000,
-    "min_users": 20000,
+    "num_movie": 1000,
+    "num_user": 20000,
     "user_threshold": 5,
     "item_threshold": 100,
     "op": "./data/raw",

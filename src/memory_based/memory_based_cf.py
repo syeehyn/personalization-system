@@ -30,7 +30,6 @@ class Memory_based_CF():
             denom = np.linalg.norm(self.similarity_matrix[i, row], ord = 1)
             if denom == 0:
                 val = mu[i]
-
             else:
                 val = mu[i] + nom/denom          
             preds.append(val)

@@ -2,49 +2,37 @@ import pyspark.ml as M
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
 
-def sampling(ratings, min_user, min_movie, user_threshold, movie_threshold, random_seed):
-    userid_filter = ratings.groupby('userId')\
-        .agg(F.count(F.col('movieId'))\
-                    .alias('count'))\
-        .where(F.col('count') >= user_threshold)
-    movieid_filter = ratings.groupby('movieId')\
-            .agg(F.count(F.col('userId'))\
-                        .alias('count'))\
-            .where(F.col('count') >= movie_threshold)
-    subset = ratings.join(userid_filter,
-                            ratings.userId == userid_filter.userId)\
-                        .select(ratings.userId, ratings.movieId, ratings.rating)\
-                        .join(movieid_filter,
-                            ratings.movieId == movieid_filter.movieId)\
-                        .select(ratings.userId, ratings.movieId, ratings.rating).persist()
-    frac = .001
-    frac_incr = 2
-    cnt_user = 0
-    cnt_movie = 0
-    while cnt_user < min_user or cnt_movie < min_movie:
-        frac *= frac_incr
-        sample = subset.sample(fraction=frac, seed = random_seed)
-        userid_filter = sample.groupby('userId')\
-                .agg(F.count(F.col('movieId'))\
-                            .alias('count'))\
-                .where(F.col('count') >= user_threshold)
-        movieid_filter = sample.groupby('movieId')\
-                .agg(F.count(F.col('userId'))\
-                            .alias('count'))\
-            .where(F.col('count') >= movie_threshold)
+def sampling(ratings,
+            num_user, 
+            num_item, 
+            user_threshold, 
+            item_threshold, 
+            random_seed,
+            userCol='userId', 
+            itemCol='movieId',
+            targetCol='rating'):
+    n_users, n_items = 0, 0
+    while n_users < num_user and n_items < num_item:
+        movieid_filter = ratings.groupby(itemCol)\
+            .agg(F.count(userCol)\
+            .alias('cnt'))\
+            .where(F.col('cnt') >= item_threshold)\
+            .select(itemCol)\
+            .orderBy(F.rand(seed=random_seed))\
+            .limit(num_item)
+        sample = ratings.join(movieid_filter,
+                                ratings[itemCol] == movieid_filter[itemCol])\
+                            .select(ratings[userCol], ratings[itemCol], ratings[targetCol])
+        userid_filter = sample.groupby(userCol)\
+                        .agg(F.count(itemCol)\
+                        .alias('cnt'))\
+                        .where(F.col('cnt') >= user_threshold)\
+                        .select(userCol)\
+                        .orderBy(F.rand(seed=random_seed))\
+                        .limit(num_user)
         sample = sample.join(userid_filter,
-                            sample.userId == userid_filter.userId)\
-                        .select(sample.userId, sample.movieId, sample.rating)\
-                        .join(movieid_filter,
-                            sample.movieId == movieid_filter.movieId)\
-                        .select(sample.userId, sample.movieId, sample.rating)
-        cnt_user = sample.select('userId').distinct().count()
-        cnt_movie = sample.select('movieId').distinct().count()
-        print(f'''
-                with frac = {frac},
-                {cnt_user} users rated at least {user_threshold} movies,
-                {cnt_movie} movies are rated by at least {movie_threshold} users.
-                ''')
-    subset.unpersist()
-    print(f'final sample has {cnt_user} users and {cnt_movie} movies')
+                                ratings[userCol] == userid_filter[userCol])\
+                            .select(ratings[userCol], ratings[itemCol], ratings[targetCol]).persist()
+        n_users, n_items = sample.select(userCol).distinct().count(), sample.select(itemCol).distinct().count()
+        print(f'sample has {n_users} users and {n_items} items')
     return sample
