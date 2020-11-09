@@ -3,7 +3,7 @@ import pyspark.sql.functions as F
 class indexTransformer():
     """[summary]
     """    
-    def __init__(self, usercol='userId', itemcol='movieId'):
+    def __init__(self, usercol='userId', itemcol='movieId', ratingcol='rating'):
         """[summary]
 
         Args:
@@ -12,6 +12,7 @@ class indexTransformer():
         """        
         self.usercol = usercol
         self.itemcol = itemcol
+        self.ratingcol = ratingcol
         self.u_indxer =  M.feature.StringIndexer(inputCol=usercol, 
                                                 outputCol=usercol+'_idx', 
                                                 handleInvalid = 'skip')
@@ -40,7 +41,7 @@ class indexTransformer():
         """        
         X_ = self.u_indxer.transform(X)
         X_ = self.i_indxer.transform(X_)
-        return self._cast_int(X_).orderBy([self.usercol+'_idx', self.itemcol+'_idx'])
+        return X_.orderBy([self.usercol+'_idx', self.itemcol+'_idx'])
     
     def fit_transform(self, X):
         """[summary]
@@ -53,14 +54,3 @@ class indexTransformer():
         """        
         self.fit(X)
         return self.transform(X)
-    
-    def _cast_int(self, X):
-        """[summary]
-
-        Args:
-            X ([type]): [description]
-
-        Returns:
-            [type]: [description]
-        """        
-        return X.select([F.col(c).cast('int') for c in X.columns])

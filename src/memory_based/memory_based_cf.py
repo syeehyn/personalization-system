@@ -1,7 +1,7 @@
 from scipy import sparse
 import numpy as np
-from tqdm import tqdm
 import pyspark.sql.functions as F
+import pyspark.sql.types as T
 import warnings
 from .. import indexTransformer
 warnings.filterwarnings("ignore")
@@ -19,50 +19,44 @@ class Memory_based_CF():
         X = self._preprocess(_X, True)
         self.X = X
         self.similarity_matrix = self._pearson_corr(X)
+        self.prediction_matrix = self._get_predict()
+        
     def predict(self, _X):
         rows, cols = self._preprocess(_X, False)
-        mu = np.array(np.nan_to_num(self.X.sum(1) / (self.X != 0).sum(1))).reshape(-1)
         preds = []
-        for i,j in tqdm(zip(rows,cols), total=len(rows)):
-            row = sparse.find(self.X[:, j])[0]
-            target = sparse.find(self.X[:, j])[2]
-            nom = np.array(self.similarity_matrix[i, row]).reshape(-1).dot((target - mu[row]))
-            denom = np.linalg.norm(self.similarity_matrix[i, row], ord = 1)
-            if denom == 0:
-                val = mu[i]
-            else:
-                val = mu[i] + nom/denom          
-            preds.append(val)
+        for i,j in zip(rows,cols):   
+            preds.append(self.prediction_matrix[i, j])
         df = self.idxer.transform(_X).select(self.usercol, self.itemcol, self.ratingcol).toPandas()
         df['prediction'] = preds
         return self.spark.createDataFrame(df)
     def _preprocess(self, X, fit):
-        cast_int = lambda df: df.select([F.col(c).cast('int') for c in [self.usercol, self.itemcol]] + \
-                                [F.col(self.ratingcol).cast('float')])
-        _X = cast_int(X)
         if fit:
             self.idxer = indexTransformer(self.usercol, self.itemcol)
-            self.idxer.fit(_X)
-            X = self.idxer.transform(_X).select(self.usercol+'_idx', self.itemcol+'_idx', self.ratingcol).toPandas().values
+            self.idxer.fit(X)
+            _X = self.idxer.transform(X)\
+                            .select(F.col(self.usercol+'_idx').alias(self.usercol), 
+                                    F.col(self.itemcol+'_idx').alias(self.itemcol), 
+                                    F.col(self.ratingcol))
+            _X = _X.toPandas().values
             if self.base == 'user':
-                row = X[:, 0]
-                col = X[:, 1]
-                data = X[:, 2]
+                row = _X[:, 0].astype(int)
+                col = _X[:, 1].astype(int)
+                data = _X[:, 2].astype(float)
             elif self.base == 'item':
-                row = X[:, 1]
-                col = X[:, 0]
-                data = X[:, 2]
+                row = _X[:, 1].astype(int)
+                col = _X[:, 0].astype(int)
+                data = _X[:, 2].astype(float)
             else:
                 raise NotImplementedError
             return sparse.csr_matrix((data, (row, col)))
         else:
-            X = self.idxer.transform(_X).select(self.usercol+'_idx', self.itemcol+'_idx').toPandas().values
+            _X = self.idxer.transform(X).select(self.usercol+'_idx', self.itemcol+'_idx').toPandas().values
             if self.base == 'user':
-                row = X[:, 0]
-                col = X[:, 1]
+                row = _X[:, 0].astype(int)
+                col = _X[:, 1].astype(int)
             elif self.base == 'item':
-                row = X[:, 1]
-                col = X[:, 0]
+                row = _X[:, 1].astype(int)
+                col = _X[:, 0].astype(int)
             else:
                 raise NotImplementedError
             return row, col
@@ -76,4 +70,14 @@ class Memory_based_CF():
         
         d = np.diag(C)
         coeffs = C / np.sqrt(np.outer(d, d))
-        return np.array(np.nan_to_num(coeffs))
+        return np.array(np.nan_to_num(coeffs)) - np.eye(A.shape[0])
+    def _get_predict(self):
+        mu_iarray = np.array(np.nan_to_num(self.X.sum(1) / (self.X != 0).sum(1))).reshape(-1)
+        mu_imat = np.vstack([mu_iarray for _ in range(self.X.shape[1])]).T
+        x = self.X.copy()
+        x[x==0] = np.NaN
+        diff = np.nan_to_num(x-mu_imat)
+        sim_norm_mat = abs(self.similarity_matrix).dot((diff!=0).astype(int))
+        w = self.similarity_matrix.dot(diff) / sim_norm_mat
+        w = np.nan_to_num(w)
+        return mu_imat + w
