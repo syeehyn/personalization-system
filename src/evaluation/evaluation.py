@@ -2,6 +2,7 @@ import pyspark.sql.functions as F
 from tqdm import tqdm
 import pandas as pd
 from ..model_based import Als
+from ..model_based import nmf
 
 def rmse(with_pred_df, rating_col_name = "rating", pred_col_name = "prediction"):
     """[summary]
@@ -108,15 +109,7 @@ def Cross_validate_als(training,
 
     Returns:
         [type]: [description]
-    """    
-    print(f'''
-        training set num of rows {training.count()},
-        test set num of rows {test.count()},
-        training set num of users {training.select('userId').distinct().count()},
-        training set num of movies {training.select('movieId').distinct().count()},
-        test set num of users {test.select('userId').distinct().count()},
-        test set num of movies {test.select('movieId').distinct().count()},
-        ''')
+    """ 
     param_list = [(i, j) for i in regParam for j in rank]
     _training, _validation = training.randomSplit([1-valid_ratio, valid_ratio], seed = seed)
     result = []
