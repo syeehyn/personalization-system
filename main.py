@@ -1,4 +1,5 @@
 import json
+import os
 from os import path as osp
 import sys
 import pandas as pd
@@ -9,7 +10,6 @@ from src.evaluation import Evaluator, Cross_validate_als
 DOWNLOAD = json.load(open('config/downloads.json'))
 SAMPLE = json.load(open('config/sample.json'))
 SPLIT = json.load(open('config/split.json'))
-ALS = json.load(open('config/als_params.json'))
 
 def main(targets):
     """[main function to execute ETL pipeline]
@@ -19,6 +19,8 @@ def main(targets):
     """
     if 'download' in targets:
         downloads(DOWNLOAD['url'], DOWNLOAD['fp'])
+        if osp.isfile(osp.join(DOWNLOAD['fp'], 'movies.csv')):
+            os.rename(osp.join(DOWNLOAD['fp'], 'movies.csv'), osp.join(SAMPLE['op'], 'movies.csv'))
     if 'sample' in targets:
         spark =Spark()
         ratings = loading(spark, DOWNLOAD['fp'])['ratings']
@@ -39,22 +41,6 @@ def main(targets):
                                         'train_' + str(i) + '_' + str(1-i)+'.csv'), index=False)
             test.toPandas().to_csv(osp.join(SPLIT['op'],
                                         'test_' + str(i) + '_' + str(1-i)+'.csv'), index=False)
-    if 'cv-als' in targets:
-        spark = Spark()
-        datas = loading(spark, ALS['data_fp'])
-        for i in ['0.75_0.25', '0.5_0.5', '0.25_0.75']:
-            print(f'generating cv result for traing_test: {i}')
-            train, test = datas['train_' + i], datas['test_' + i]
-            evaluators = [Evaluator('rmse'), Evaluator('accuracy')]
-            result = Cross_validate_als(train,
-                                                test,
-                                                ALS['valid_ratio'],
-                                                ALS['regParam'],
-                                                ALS['rank'],
-                                                ALS['seed'],
-                                                evaluators
-                                                )
-            result.to_csv(osp.join(ALS['op'], 'als_' + i + '_cv_result.csv'))
 if __name__=='__main__':
     targets = sys.argv[1:]
     main(targets)
