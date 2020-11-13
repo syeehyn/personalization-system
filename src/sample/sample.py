@@ -30,6 +30,7 @@ def sampling(ratings,
         Pyspark DataFrame: [the sample]
     """    
     n_users, n_items = 0, 0
+    M, N = num_item, num_user
     while n_users < num_user and n_items < num_item:
         movieid_filter = ratings.groupby(itemCol)\
             .agg(F.count(userCol)\
@@ -37,7 +38,7 @@ def sampling(ratings,
             .where(F.col('cnt') >= item_threshold)\
             .select(itemCol)\
             .orderBy(F.rand(seed=random_seed))\
-            .limit(num_item)
+            .limit(M)
         sample = ratings.join(movieid_filter,
                                 ratings[itemCol] == movieid_filter[itemCol])\
                             .select(ratings[userCol], ratings[itemCol], ratings[timeCol], ratings[targetCol])
@@ -47,10 +48,12 @@ def sampling(ratings,
                         .where(F.col('cnt') >= user_threshold)\
                         .select(userCol)\
                         .orderBy(F.rand(seed=random_seed))\
-                        .limit(num_user)
+                        .limit(N)
         sample = sample.join(userid_filter,
                                 ratings[userCol] == userid_filter[userCol])\
                             .select(ratings[userCol], ratings[itemCol], ratings[timeCol], ratings[targetCol]).persist()
         n_users, n_items = sample.select(userCol).distinct().count(), sample.select(itemCol).distinct().count()
         print(f'sample has {n_users} users and {n_items} items')
+        M += 100
+        N += 100
     return sample
