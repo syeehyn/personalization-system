@@ -28,8 +28,8 @@ def acc(with_pred_df, rating_col_name = "rating", pred_col_name = "prediction"):
     Returns:
         float: [accuracy]
     """
-    TP = ((F.col(rating_col_name) >= 3.5) & (F.col(pred_col_name) >= 3.5))
-    TN = ((F.col(rating_col_name) < 3.5) & (F.col(pred_col_name) < 3.5))
+    TP = ((F.col(rating_col_name) >= 3) & (F.col(pred_col_name) >= 3))
+    TN = ((F.col(rating_col_name) < 3) & (F.col(pred_col_name) < 3))
     correct = with_pred_df.filter(TP | TN)
     return correct.count() / with_pred_df.count()
 
@@ -47,7 +47,7 @@ def coverage_k(with_pred_df, id_col_name, rating_col_name = "rating",
     Returns:
         float: [coverage k]
     """
-    TP = ((F.col(rating_col_name) >= 3.5) & (F.col(pred_col_name) >= 3.5))
+    TP = ((F.col(rating_col_name) >= 3) & (F.col(pred_col_name) >= 3))
     num_covered = with_pred_df.select(id_col_name, rating_col_name, pred_col_name).filter(TP).groupBy(id_col_name).count()
     num_covered_bigger_than_k = num_covered.filter(f"count >= {k}")
     return num_covered_bigger_than_k.count() / num_covered.count()
