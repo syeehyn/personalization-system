@@ -4,10 +4,10 @@ import psutil
 NUM_WORKER = psutil.cpu_count(logical = False)
 NUM_THREAD = psutil.cpu_count(logical = True)
 def Spark():
-    """[summary]
+    """[function for creating spark session]
 
     Returns:
-        [type]: [description]
+        [Spark Session]: [the spark session]
     """    
     conf_spark = SparkConf().set("spark.driver.host", "127.0.0.1")\
                             .set("spark.executor.instances", NUM_WORKER)\

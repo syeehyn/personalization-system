@@ -2,11 +2,11 @@ import requests, zipfile, io
 from os import path
 from tqdm import tqdm
 def downloading(url, fp):
-    """[summary]
+    """[to download zipfile with url]
 
     Args:
-        url ([type]): [description]
-        fp ([type]): [description]
+        url (str): [the url of the downloading file]
+        fp (str): [the filepath of downloaded file]
     """    
     r = requests.get(url)
     with zipfile.ZipFile(io.BytesIO(r.content)) as zip:

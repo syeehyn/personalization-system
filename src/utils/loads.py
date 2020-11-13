@@ -2,14 +2,14 @@ from glob import glob
 from os import path as osp
 
 def loading(spark, fp):
-    """[summary]
+    """[function to load data from a directory]
 
     Args:
-        spark ([type]): [description]
-        fp ([type]): [description]
+        spark (Spark Session): [the current spark session]
+        fp (str): [the file path of directory]
 
     Returns:
-        [type]: [description]
+        dict: [the dictionary of loaded files]
     """    
     data_list = [i.split('/')[-1] for i in glob(osp.join(fp, '*.csv'))]
     data_map = {

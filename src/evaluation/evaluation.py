@@ -2,32 +2,31 @@ import pyspark.sql.functions as F
 from tqdm import tqdm
 import pandas as pd
 from ..model_based import Als
-from ..model_based import nmf
 
 def rmse(with_pred_df, rating_col_name = "rating", pred_col_name = "prediction"):
-    """[summary]
+    """[calculate rmse of the prediction]
 
     Args:
-        with_pred_df ([type]): [description]
-        rating_col_name (str, optional): [description]. Defaults to "rating".
-        pred_col_name (str, optional): [description]. Defaults to "prediction".
+        with_pred_df (Pyspark DataFrame): [Pyspark DataFrame with target and prediction columns]
+        rating_col_name (str, optional): [column of true values]. Defaults to "rating".
+        pred_col_name (str, optional): [column of prediction values]. Defaults to "prediction".
 
     Returns:
-        [type]: [description]
+        flaot: [rmse]
     """
     return with_pred_df.select(F.sqrt(F.sum((F.col(rating_col_name) - \
                         F.col(pred_col_name))**2)/F.count(rating_col_name))).collect()[0][0]
 
 def acc(with_pred_df, rating_col_name = "rating", pred_col_name = "prediction"):
-    """[summary]
+    """[calculate rmse of the prediction]
 
     Args:
-        with_pred_df ([type]): [description]
-        rating_col_name (str, optional): [description]. Defaults to "rating".
-        pred_col_name (str, optional): [description]. Defaults to "prediction".
+        with_pred_df (Pyspark DataFrame): [Pyspark DataFrame with target and prediction columns]
+        rating_col_name (str, optional): [column of true values]. Defaults to "rating".
+        pred_col_name (str, optional): [column of prediction values]. Defaults to "prediction".
 
     Returns:
-        [type]: [description]
+        float: [accuracy]
     """
     TP = ((F.col(rating_col_name) >= 3.5) & (F.col(pred_col_name) >= 3.5))
     TN = ((F.col(rating_col_name) < 3.5) & (F.col(pred_col_name) < 3.5))
@@ -36,17 +35,17 @@ def acc(with_pred_df, rating_col_name = "rating", pred_col_name = "prediction"):
 
 def coverage_k(with_pred_df, id_col_name, rating_col_name = "rating", 
                 pred_col_name = "prediction", k=2):
-    """[summary]
+    """[calculate coverage k]
 
     Args:
-        with_pred_df ([type]): [description]
-        id_col_name ([type]): [description]
-        rating_col_name (str, optional): [description]. Defaults to "rating".
-        pred_col_name (str, optional): [description]. Defaults to "prediction".
-        k (int, optional): [description]. Defaults to 2.
+        with_pred_df (Pyspark DataFrame): [Pyspark DataFrame with target and prediction columns]
+        id_col_name (str): [the column oriented, user based or item based]
+        rating_col_name (str, optional): [column of true values]. Defaults to "rating".
+        pred_col_name (str, optional): [column of prediction values]. Defaults to "prediction".
+        k (int, optional): [k for the metrics]. Defaults to 2.
 
     Returns:
-        [type]: [description]
+        float: [coverage k]
     """
     TP = ((F.col(rating_col_name) >= 3.5) & (F.col(pred_col_name) >= 3.5))
     num_covered = with_pred_df.select(id_col_name, rating_col_name, pred_col_name).filter(TP).groupBy(id_col_name).count()
@@ -54,7 +53,7 @@ def coverage_k(with_pred_df, id_col_name, rating_col_name = "rating",
     return num_covered_bigger_than_k.count() / num_covered.count()
 
 class Evaluator():
-    """[summary]
+    """[the evaluator for evaluation purpose]
     """    
     def __init__(self, metrics, ratingCol='rating', predCol='prediction', idCol=None, k=None):
         self.metrics = metrics
@@ -63,16 +62,16 @@ class Evaluator():
         self.idCol = idCol
         self.k = k
     def evaluate(self, X):
-        """[summary]
+        """[to evaluate the prediction]
 
         Args:
-            X ([type]): [description]
+            X (Pyspark DataFrame): [Pyspark DataFrame with target and prediction columns]
 
         Raises:
-            NotImplementedError: [description]
+            NotImplementedError: [metrics not yet implemented]
 
         Returns:
-            [type]: [description]
+            float: [the corresponding metrics results]
         """        
         if self.metrics == 'rmse':
             return rmse(X, self.ratingCol, self.predCol)
@@ -93,22 +92,22 @@ def Cross_validate_als(training,
                         userCol="userId",
                         itemCol="movieId",
                         ratingCol="rating"):
-    """[summary]
+    """[helper function to tuning parameters of als algorithm]
 
     Args:
-        training ([type]): [description]
-        test ([type]): [description]
-        valid_ratio ([type]): [description]
-        regParam ([type]): [description]
-        rank ([type]): [description]
-        seed ([type]): [description]
-        evaluator ([type]): [description]
-        userCol (str, optional): [description]. Defaults to "userId".
-        itemCol (str, optional): [description]. Defaults to "movieId".
-        ratingCol (str, optional): [description]. Defaults to "rating".
+        training (Pyspark DataFrame): [the training set]
+        test (Pyspark DataFrame): [the test set]
+        valid_ratio (float): [ratio of validation set]
+        regParam (list): [list of regParam parameters]
+        rank (list): [list of rank parameters]
+        seed (int): [random seed]
+        evaluator (list): [list the evaluators]
+        userCol (str, optional): [user column]. Defaults to "userId".
+        itemCol (str, optional): [item column]. Defaults to "movieId".
+        ratingCol (str, optional): [rating/target column]. Defaults to "rating".
 
     Returns:
-        [type]: [description]
+        pd.DataFrame: [the pandas DataFrame with result of cross validation]
     """ 
     param_list = [(i, j) for i in regParam for j in rank]
     _training, _validation = training.randomSplit([1-valid_ratio, valid_ratio], seed = seed)

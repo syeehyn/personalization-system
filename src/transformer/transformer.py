@@ -4,11 +4,11 @@ class indexTransformer():
     """[summary]
     """    
     def __init__(self, usercol='userId', itemcol='movieId', ratingcol='rating'):
-        """[summary]
+        """[the index transformer for matrix purpose]
 
         Args:
-            usercol (str, optional): [description]. Defaults to 'userId'.
-            itemcol (str, optional): [description]. Defaults to 'movieId'.
+            usercol (str, optional): [user column name]. Defaults to 'userId'.
+            itemcol (str, optional): [item column name]. Defaults to 'movieId'.
         """        
         self.usercol = usercol
         self.itemcol = itemcol
@@ -21,36 +21,36 @@ class indexTransformer():
                                                 handleInvalid = 'skip')
         self.X = None
     def fit(self, X):
-        """[summary]
+        """[to train the transformer]
 
         Args:
-            X ([type]): [description]
+            X (Pyspark DataFrame): [the DataFrame for training]
         """        
         self.X = X
         self.u_indxer = self.u_indxer.fit(self.X)
         self.i_indxer = self.i_indxer.fit(self.X)
         return
     def transform(self, X):
-        """[summary]
+        """[to transform the DataFrame]
 
         Args:
-            X ([type]): [description]
+            X (Pyspark DataFrame): [the DataFrame needs to be transformed]
 
         Returns:
-            [type]: [description]
+            Pyspark DataFrame: [the transformed DataFrame with index]
         """        
         X_ = self.u_indxer.transform(X)
         X_ = self.i_indxer.transform(X_)
         return X_.orderBy([self.usercol+'_idx', self.itemcol+'_idx'])
     
     def fit_transform(self, X):
-        """[summary]
+        """[combining fit and transform]
 
         Args:
-            X ([type]): [description]
+            X (Pyspark DataFrame): [the DataFrame needs to be trained and transformed]
 
         Returns:
-            [type]: [description]
+            Pyspark DataFrame: [the transformed DataFrame with index]
         """        
         self.fit(X)
         return self.transform(X)

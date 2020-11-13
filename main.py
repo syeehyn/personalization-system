@@ -12,10 +12,10 @@ SPLIT = json.load(open('config/split.json'))
 ALS = json.load(open('config/als_params.json'))
 
 def main(targets):
-    """[summary]
+    """[main function to execute ETL pipeline]
 
     Args:
-        targets ([type]): [description]
+        targets (list): [list of string of commands]
     """
     if 'download' in targets:
         downloads(DOWNLOAD['url'], DOWNLOAD['fp'])
@@ -34,7 +34,7 @@ def main(targets):
         spark = Spark()
         data = loading(spark, SAMPLE['op'])['sample']
         for i in SPLIT['splits']:
-            train, test = train_test_split(data, SPLIT['seed'], i)
+            train, test = train_test_split(data, i)
             train.toPandas().to_csv(osp.join(SPLIT['op'],
                                         'train_' + str(i) + '_' + str(1-i)+'.csv'), index=False)
             test.toPandas().to_csv(osp.join(SPLIT['op'],

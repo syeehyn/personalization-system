@@ -2,7 +2,7 @@ import pyspark.sql.functions as F
 from pyspark.ml.recommendation import ALS
 
 class Als():
-    """[summary]
+    """[the predictor for Pyspark ALS]
     """
     def __init__(self, userCol, itemCol, ratingCol, regParam, seed, rank):
         self.userCol = userCol
@@ -18,32 +18,32 @@ class Als():
                 seed=seed,
                 rank=rank)
     def fit(self, _X):
-        """[summary]
+        """[function to train parameter of predictor]
 
         Args:
-            _X ([type]): [description]
+            _X (Pyspark DataFrame): [training set]
         """        
         X = self._preprocess(_X)
         self.model = self.als.fit(X)
     def predict(self, _X):
-        """[summary]
+        """[function to make predict over test set]
 
         Args:
-            _X ([type]): [description]
+            _X (Pyspark DataFrame): [test set]
 
         Returns:
-            [type]: [description]
+            Pyspark DataFrame: [DataFrame with 'prediction' column which has the predicting value]
         """        
         X = self._preprocess(_X)
         return self.model.transform(X)
     def _preprocess(self, _X):
-        """[summary]
+        """[preprocess the input dataset]
 
         Args:
-            _X ([type]): [description]
+            _X (Pyspark DataFrame): [the training or test set]
 
         Returns:
-            [type]: [description]
+            Pyspark DataFrame: [the preprocessed DataFrame]
         """        
         cast_int = lambda df: df.select([F.col(c).cast('int') for c in [self.userCol, self.itemCol]] + \
                                 [F.col(self.ratingCol).cast('float')])
