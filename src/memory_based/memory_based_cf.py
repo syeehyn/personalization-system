@@ -2,6 +2,7 @@ from scipy import sparse
 import numpy as np
 import pyspark.sql.functions as F
 import pyspark.sql.types as T
+import pyspark.sql.window as W
 import warnings
 from .. import indexTransformer
 warnings.filterwarnings("ignore")
@@ -29,7 +30,8 @@ class Memory_based_CF():
 
         Args:
             _X (Pyspark DataFrame): [the training set]
-        """        
+        """
+        self._X = _X  
         X = self._preprocess(_X, True)
         self.X = X
         self.similarity_matrix = self._pearson_corr(X)
@@ -51,6 +53,13 @@ class Memory_based_CF():
         df = self.idxer.transform(_X).select(self.usercol, self.itemcol, self.ratingcol).toPandas()
         df['prediction'] = preds
         return self.spark.createDataFrame(df)
+    def recommend(self, k):
+        pred = self.predict(self._X)
+        window = W.Window.partitionBy(pred[self.usercol]).orderBy(pred['prediction'].desc())
+        ranked = pred.select('*', F.rank().over(window).alias('rank'))
+        recommended = ranked.where(ranked.rank <= k).select(F.col(self.usercol).cast('string'), 
+                                                            F.col(self.itemcol).cast('string'))
+        return recommended.groupby(self.usercol).agg(F.collect_list(self.itemcol).alias('recommendation'))
     def _preprocess(self, X, fit):
         """[preprocessing function before training and predicting]
 

@@ -33,34 +33,13 @@ def acc(with_pred_df, rating_col_name = "rating", pred_col_name = "prediction"):
     correct = with_pred_df.filter(TP | TN)
     return correct.count() / with_pred_df.count()
 
-def coverage_k(with_pred_df, id_col_name, rating_col_name = "rating", 
-                pred_col_name = "prediction", k=2):
-    """[calculate coverage k]
-
-    Args:
-        with_pred_df (Pyspark DataFrame): [Pyspark DataFrame with target and prediction columns]
-        id_col_name (str): [the column oriented, user based or item based]
-        rating_col_name (str, optional): [column of true values]. Defaults to "rating".
-        pred_col_name (str, optional): [column of prediction values]. Defaults to "prediction".
-        k (int, optional): [k for the metrics]. Defaults to 2.
-
-    Returns:
-        float: [coverage k]
-    """
-    TP = ((F.col(rating_col_name) >= 3) & (F.col(pred_col_name) >= 3))
-    num_covered = with_pred_df.select(id_col_name, rating_col_name, pred_col_name).filter(TP).groupBy(id_col_name).count()
-    num_covered_bigger_than_k = num_covered.filter(f"count >= {k}")
-    return num_covered_bigger_than_k.count() / num_covered.count()
-
 class Evaluator():
     """[the evaluator for evaluation purpose]
     """    
-    def __init__(self, metrics, ratingCol='rating', predCol='prediction', idCol=None, k=None):
+    def __init__(self, metrics, ratingCol='rating', predCol='prediction'):
         self.metrics = metrics
         self.ratingCol = ratingCol
         self.predCol = predCol
-        self.idCol = idCol
-        self.k = k
     def evaluate(self, X):
         """[to evaluate the prediction]
 
@@ -77,8 +56,6 @@ class Evaluator():
             return rmse(X, self.ratingCol, self.predCol)
         elif self.metrics =='accuracy':
             return acc(X, self.ratingCol, self.predCol)
-        elif self.metrics =='converage_k':
-            return coverage_k(X, self.idCol, self.ratingCol, self.predCol, self.k)
         else:
             raise NotImplementedError
 

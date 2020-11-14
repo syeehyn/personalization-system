@@ -1,1 +1,1 @@
-from .evaluation import rmse, acc, coverage_k, Evaluator, Cross_validate_als
+from .evaluation import rmse, acc, Evaluator, Cross_validate_als

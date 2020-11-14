@@ -1,5 +1,6 @@
 import pyspark.sql.functions as F
 from pyspark.ml.recommendation import ALS
+import pyspark.sql.window as W
 
 class Als():
     """[the predictor for Pyspark ALS]
@@ -22,7 +23,8 @@ class Als():
 
         Args:
             _X (Pyspark DataFrame): [training set]
-        """        
+        """
+        self.X = _X
         X = self._preprocess(_X)
         self.model = self.als.fit(X)
     def predict(self, _X):
@@ -36,6 +38,14 @@ class Als():
         """        
         X = self._preprocess(_X)
         return self.model.transform(X)
+    def recommend(self, k):
+        pred = self.predict(self.X)
+        window = W.Window.partitionBy(pred[self.userCol]).orderBy(pred['prediction'].desc())
+        ranked = pred.select('*', F.rank().over(window).alias('rank'))
+        recommended = ranked.where(ranked.rank <= k).select(F.col(self.userCol).cast('string'), 
+                                                            F.col(self.itemCol).cast('string'))
+        return recommended.groupby(self.userCol).agg(F.collect_list(self.itemCol).alias('recommendation'))
+
     def _preprocess(self, _X):
         """[preprocess the input dataset]
 

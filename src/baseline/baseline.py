@@ -1,4 +1,5 @@
 import pyspark.sql.functions as F
+import pyspark.sql.window as W
 
 
 class Baseline():
@@ -14,7 +15,8 @@ class Baseline():
 
         Args:
             X (Pyspark DataFrame): [training set]
-        """        
+        """ 
+        self.X = X
         train = self._preprocess(X)
         umean = train.groupby(self.usercol).agg(F.mean(self.ratingcol).alias('umean'))
         imean = train.groupby(self.itemcol).agg(F.mean(self.ratingcol).alias('imean'))
@@ -41,9 +43,13 @@ class Baseline():
                         ((F.col('umean') + F.col('imean'))/2).alias('prediction'))
         
         return pred
-        
-        
-        
+    def recommend(self, k):
+        pred = self.predict(self.X)
+        window = W.Window.partitionBy(pred[self.usercol]).orderBy(pred['prediction'].desc())
+        ranked = pred.select('*', F.rank().over(window).alias('rank'))
+        recommended = ranked.where(ranked.rank <= k).select(F.col(self.usercol).cast('string'), 
+                                                            F.col(self.itemcol).cast('string'))
+        return recommended.groupby(self.usercol).agg(F.collect_list(self.itemcol).alias('recommendation'))
     def _preprocess(self, _X):
         """[preprocess the input dataset]
 
