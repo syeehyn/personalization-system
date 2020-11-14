@@ -5,7 +5,7 @@ import pyspark.sql.window as W
 class Als():
     """[the predictor for Pyspark ALS]
     """
-    def __init__(self, userCol, itemCol, ratingCol, regParam, seed, rank):
+    def __init__(self, userCol, itemCol, ratingCol, regParam, seed, rank, make_recommend = False):
         self.userCol = userCol
         self.itemCol = itemCol
         self.ratingCol = ratingCol
@@ -18,15 +18,21 @@ class Als():
                 regParam=regParam,
                 seed=seed,
                 rank=rank)
+        self.make_recommend = make_recommend
+        self.pred_train = None
     def fit(self, _X):
         """[function to train parameter of predictor]
 
         Args:
             _X (Pyspark DataFrame): [training set]
         """
-        self.X = _X
         X = self._preprocess(_X)
         self.model = self.als.fit(X)
+        if self.make_recommend:
+            self.pred_train = self.predict(_X).persist()
+        else:
+            self.pred_train = self.predict(_X)
+
     def predict(self, _X):
         """[function to make predict over test set]
 
@@ -39,12 +45,11 @@ class Als():
         X = self._preprocess(_X)
         return self.model.transform(X)
     def recommend(self, k):
-        pred = self.predict(self.X)
-        window = W.Window.partitionBy(pred[self.userCol]).orderBy(pred['prediction'].desc())
-        ranked = pred.select('*', F.rank().over(window).alias('rank'))
+        window = W.Window.partitionBy(self.pred_train[self.userCol]).orderBy(self.pred_train['prediction'].desc())
+        ranked = self.pred_train.select('*', F.rank().over(window).alias('rank'))
         recommended = ranked.where(ranked.rank <= k).select(F.col(self.userCol).cast('string'), 
                                                             F.col(self.itemCol).cast('string'))
-        return recommended.groupby(self.userCol).agg(F.collect_list(self.itemCol).alias('recommendation'))
+        return recommended
 
     def _preprocess(self, _X):
         """[preprocess the input dataset]

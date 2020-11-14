@@ -5,10 +5,12 @@ import pyspark.sql.window as W
 class Baseline():
     """[baseline model]
     """    
-    def __init__(self, usercol='userId', itemcol='movieId', ratingcol='rating'):
+    def __init__(self, usercol='userId', itemcol='movieId', ratingcol='rating', make_recommend=False):
         self.usercol = usercol
         self.itemcol = itemcol
         self.ratingcol = ratingcol
+        self.make_recommend = make_recommend
+        self.predict_train = None
     
     def fit(self, X):
         """[train the model]
@@ -22,6 +24,11 @@ class Baseline():
         imean = train.groupby(self.itemcol).agg(F.mean(self.ratingcol).alias('imean'))
         self.umean = umean
         self.imean = imean
+
+        if self.make_recommend:
+            self.pred_train = self.predict(X).persist()
+        else:
+            self.pred_train = self.predict(X)
         
     def predict(self, X):
         """[predict based on X]
@@ -44,12 +51,11 @@ class Baseline():
         
         return pred
     def recommend(self, k):
-        pred = self.predict(self.X)
-        window = W.Window.partitionBy(pred[self.usercol]).orderBy(pred['prediction'].desc())
-        ranked = pred.select('*', F.rank().over(window).alias('rank'))
+        window = W.Window.partitionBy(self.pred_train[self.usercol]).orderBy(self.pred_train['prediction'].desc())
+        ranked = self.pred_train.select('*', F.rank().over(window).alias('rank'))
         recommended = ranked.where(ranked.rank <= k).select(F.col(self.usercol).cast('string'), 
                                                             F.col(self.itemcol).cast('string'))
-        return recommended.groupby(self.usercol).agg(F.collect_list(self.itemcol).alias('recommendation'))
+        return recommended
     def _preprocess(self, _X):
         """[preprocess the input dataset]
 

@@ -1,13 +1,12 @@
 from scipy import sparse
 import numpy as np
 import pyspark.sql.functions as F
-import pyspark.sql.types as T
 import pyspark.sql.window as W
 import warnings
 from .. import indexTransformer
 warnings.filterwarnings("ignore")
 class Memory_based_CF():
-    def __init__(self, spark, base, usercol='userId', itemcol='movieId', ratingcol='rating'):
+    def __init__(self, spark, base, usercol='userId', itemcol='movieId', ratingcol='rating', make_recommend=False):
         """[the memory based collabritive filtering model]
 
         Args:
@@ -25,17 +24,23 @@ class Memory_based_CF():
         self.X = None
         self.idxer = None
         self.similarity_matrix = None
+        self.prediction_matrix = None
+        self.make_recommend = make_recommend
+        self.pred_train = None
     def fit(self, _X):
         """[to train the model]
 
         Args:
             _X (Pyspark DataFrame): [the training set]
         """
-        self._X = _X  
         X = self._preprocess(_X, True)
         self.X = X
         self.similarity_matrix = self._pearson_corr(X)
         self.prediction_matrix = self._get_predict()
+        if self.make_recommend:
+            self.pred_train = self.predict(_X).persist()
+        else:
+            self.pred_train = self.predict(_X)
         
     def predict(self, _X):
         """[to predict based on trained model]
@@ -54,12 +59,11 @@ class Memory_based_CF():
         df['prediction'] = preds
         return self.spark.createDataFrame(df)
     def recommend(self, k):
-        pred = self.predict(self._X)
-        window = W.Window.partitionBy(pred[self.usercol]).orderBy(pred['prediction'].desc())
-        ranked = pred.select('*', F.rank().over(window).alias('rank'))
+        window = W.Window.partitionBy(self.pred_train[self.usercol]).orderBy(self.pred_train['prediction'].desc())
+        ranked = self.pred_train.select('*', F.rank().over(window).alias('rank'))
         recommended = ranked.where(ranked.rank <= k).select(F.col(self.usercol).cast('string'), 
                                                             F.col(self.itemcol).cast('string'))
-        return recommended.groupby(self.usercol).agg(F.collect_list(self.itemcol).alias('recommendation'))
+        return recommended
     def _preprocess(self, X, fit):
         """[preprocessing function before training and predicting]
 
