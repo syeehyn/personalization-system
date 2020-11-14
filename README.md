@@ -98,6 +98,13 @@ In our experimental dataset: we used following parameters:
 }
 
 ```
+
+To proceed train-test-split, run following line:
+
+```bash
+python main.py train-test-split
+```
+
 ----
 
 ## Model and Recommender System
