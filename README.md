@@ -11,7 +11,7 @@ This repository contains library code and experimental of Homework 2 of IEOR 457
 ``` bash
 ├── LICENSE
 ├── README.md
-├── config #configuration file for ETL command
+├── config #configuration file for ETL commands
 │   ├── downloads.json
 │   ├── sample.json
 │   └── split.json
@@ -170,17 +170,17 @@ We use `numpy` to build Memory-based Collaborative Filtering brute-forcely.
 
 #### User-based Collaborative Filtering
 
-You may find the usage example and evaluation results in our experimental dataset in `User-based Collaborative Filtering` section of our final report [notebook](./notebook/final_report.ipynb)
+You may find the usage example and evaluation results in our experimental dataset in `User-based Collaborative Filtering` section of our final report [notebook](./notebook/final_report.ipynb#Memory-Based-Collaborative-Filtering)
 
 #### Item-based Collaborative Filtering
 
-You may find the usage example and evaluation results in our experimental dataset in `Item-based Collaborative Filtering` section of our final report [notebook](./notebook/final_report.ipynb)
+You may find the usage example and evaluation results in our experimental dataset in `Item-based Collaborative Filtering` section of our final report [notebook](./notebook/final_report.ipynb#Memory-Based-Collaborative-Filtering)
 
 ### Model-based Collaborative Filtering
 
-Our model-based collaborative filtering takes advantage ALS implementation from Pyspark. 
+Our model-based collaborative filtering takes advantage ALS implementation from Pyspark.
 
-You may find the usage example and evaluation results in our experimental dataset in `Model-based Collaborative Filtering` section of our final report [notebook](./notebook/final_report.ipynb)
+You may find the usage example and evaluation results in our experimental dataset in `Model-based Collaborative Filtering` section of our final report [notebook](./notebook/final_report.ipynb#Model-Based-Collaborative-Filtering)
 
 ----
 
