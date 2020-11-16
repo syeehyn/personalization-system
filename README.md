@@ -170,17 +170,17 @@ We use `numpy` to build Memory-based Collaborative Filtering brute-forcely.
 
 #### User-based Collaborative Filtering
 
-You may find the usage example and evaluation results in our experimental dataset in `User-based Collaborative Filtering` section of our final report [notebook](./notebook/final_report.ipynb#Memory-Based-Collaborative-Filtering)
+You may find the usage example and evaluation results in our experimental dataset in `Memory Based Collaborative Filtering` section of our final report [notebook](./notebook/final_report.ipynb#Memory-Based-Collaborative-Filtering)
 
 #### Item-based Collaborative Filtering
 
-You may find the usage example and evaluation results in our experimental dataset in `Item-based Collaborative Filtering` section of our final report [notebook](./notebook/final_report.ipynb#Memory-Based-Collaborative-Filtering)
+You may find the usage example and evaluation results in our experimental dataset in `Memory Based Collaborative Filtering` section of our final report [notebook](./notebook/final_report.ipynb#Memory-Based-Collaborative-Filtering)
 
 ### Model-based Collaborative Filtering
 
 Our model-based collaborative filtering takes advantage ALS implementation from Pyspark.
 
-You may find the usage example and evaluation results in our experimental dataset in `Model-based Collaborative Filtering` section of our final report [notebook](./notebook/final_report.ipynb#Model-Based-Collaborative-Filtering)
+You may find the usage example and evaluation results in our experimental dataset in `Model Based Collaborative Filtering` section of our final report [notebook](./notebook/final_report.ipynb#Model-Based-Collaborative-Filtering)
 
 ----
 
