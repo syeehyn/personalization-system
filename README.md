@@ -1,4 +1,4 @@
-# IEOR 4571 Homework 2
+# IEOR 4571 Final Project
 
 This repository contains library code and experimental of Homework 2 of IEOR 4571 course in Columbia University.
 
@@ -8,57 +8,7 @@ This repository contains library code and experimental of Homework 2 of IEOR 457
 
 ## Description of Content
 
-``` bash
-├── LICENSE
-├── README.md
-├── config #configuration file for ETL commands
-│   ├── downloads.json
-│   ├── sample.json
-│   └── split.json
-├── data #our sample/experimental data
-│   ├── interim #splitted datasets
-│   ├── processed #results
-│   │   ├── evaluation_result #results for model evaluation
-│   │   ├── prediction #results with prediction
-│   │   └── tuning_result #tuning paramter results
-│   └── raw
-│       ├── movies.csv #the movie genre reference
-│       └── sample.csv #our sample
-├── main.py #python script for ETL process
-├── notebook
-│   ├── als_parameter_tuning.ipynb #notebook of als parameter tuning execution
-│   ├── coverage_execution.ipynb #notebook of coverage evaluation execution
-│   ├── evaluation_execution.ipynb #notebook of model evaluation (rmse/acc) execution
-│   └── final_report.ipynb #notebook of final report
-├── requirements.txt #required libiraries
-└── src #libary source code
-    ├── __init__.py
-    ├── baseline #baseline model sorce code
-    │   ├── __init__.py
-    │   └── baseline.py
-    ├── evaluation #evaluator source code
-    │   ├── __init__.py
-    │   └── evaluation.py
-    ├── memory_based #memory-based CF source code
-    │   ├── __init__.py
-    │   └── memory_based_cf.py
-    ├── model_based #model-based CF source code
-    │   ├── __init__.py
-    │   └── als.py
-    ├── sample #sampling source code
-    │   ├── __init__.py
-    │   └── sample.py
-    ├── transformer #transformer/preprocessor source code
-    │   ├── __init__.py
-    │   └── transformer.py
-    └── utils #utility function source code
-        ├── __init__.py
-        ├── downloads.py
-        ├── loads.py
-        ├── spark_session.py
-        └── train_test_split.py
-```
-
+`
 ----
 
 ## Prerequisite and Getting Started
@@ -163,24 +113,6 @@ python main.py train-test-split
 ----
 
 ## Model and Recommender System
-
-### Memory-based Collaborative Filtering
-
-We use `numpy` to build Memory-based Collaborative Filtering brute-forcely.
-
-#### User-based Collaborative Filtering
-
-You may find the usage example and evaluation results in our experimental dataset in `Memory Based Collaborative Filtering` section of our final report [notebook](./notebook/final_report.ipynb#Memory-Based-Collaborative-Filtering)
-
-#### Item-based Collaborative Filtering
-
-You may find the usage example and evaluation results in our experimental dataset in `Memory Based Collaborative Filtering` section of our final report [notebook](./notebook/final_report.ipynb#Memory-Based-Collaborative-Filtering)
-
-### Model-based Collaborative Filtering
-
-Our model-based collaborative filtering takes advantage ALS implementation from Pyspark.
-
-You may find the usage example and evaluation results in our experimental dataset in `Model Based Collaborative Filtering` section of our final report [notebook](./notebook/final_report.ipynb#Model-Based-Collaborative-Filtering)
 
 ----
 
