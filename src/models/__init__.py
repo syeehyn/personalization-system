@@ -1,3 +1,3 @@
-from .baseline import Baseline
-from .model_based import Als
-from .memory_based import Memory_based_CF
+from .als import Baseline
+from .baseline import Als
+from .memory_based_cf import Memory_based_CF
