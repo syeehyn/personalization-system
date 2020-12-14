@@ -3,7 +3,7 @@ import numpy as np
 import pyspark.sql.functions as F
 import pyspark.sql.window as W
 import warnings
-from .. import indexTransformer
+from ...utils import indexTransformer
 warnings.filterwarnings("ignore")
 class Memory_based_CF():
     def __init__(self, spark, base, usercol='userId', itemcol='movieId', ratingcol='rating', make_recommend=False):

@@ -12,6 +12,7 @@ class MovielensDataset(torch.utils.data.Dataset):
                         genre_encoder=None, 
                         ordinal_encoder=None,
                         binary=False,
+                        validation=0.1,
                         user_col = 'userId',
                         item_col = 'movieId',
                         rating_col = 'rating'):
@@ -38,11 +39,17 @@ class MovielensDataset(torch.utils.data.Dataset):
         self.items = self.__preprocess_id(data[[user_col, item_col]])
         self.genres = self.__preprocess_genre(data, movies)
         self.field_dims = np.max(self.items, axis=0) + 1
+        if validation:
+            self.val_mask = np.unique(np.random.choice(range(len(self)), int(len(self)*.01), replace=False))
+            self.train_mask = list(set(range(len(self))) - set(self.val_mask))
+        else:
+            self.val_mask = []
+            self.train_mask = list(range(len(self)))
         
     def __len__(self):
         return self.targets.shape[0]
     def __getitem__(self, index):
-        return self.items[index], self.genres[index].toarray().reshape(-1,), self.targets[index]
+        return self.items[index], self.genres[index].toarray(), self.targets[index]
     
     def __preprocess_genre(self, X, movies):
         if self.train:
