@@ -3,6 +3,6 @@
     "num_user": 20000,
     "user_threshold": 5,
     "item_threshold": 100,
-    "op": "./data/raw",
+    "op": "./data/",
     "random_seed": 0
 }
