@@ -9,6 +9,7 @@ ipykernel
 ipython
 bokeh
 pyspark
+findspark
 tqdm
 psutil
 torch==1.6.0
