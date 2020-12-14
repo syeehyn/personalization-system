@@ -21,6 +21,8 @@ def main(targets):
         downloads(DOWNLOAD['url'], DOWNLOAD['fp'])
         if osp.isfile(osp.join(DOWNLOAD['fp'], 'movies.csv')):
             os.rename(osp.join(DOWNLOAD['fp'], 'movies.csv'), osp.join(SAMPLE['op'], 'movies.csv'))
+        if osp.isfile(osp.join(DOWNLOAD['fp'], 'tags.csv')):
+            os.rename(osp.join(DOWNLOAD['fp'], 'tags.csv'), osp.join(SAMPLE['op'], 'tags.csv'))
     if 'sample' in targets:
         spark =Spark()
         ratings = loading(spark, DOWNLOAD['fp'])['ratings']

@@ -1,7 +1,7 @@
 import pyspark.sql.functions as F
 from tqdm import tqdm
 import pandas as pd
-from ..model_based import Als
+from ..models.model_based import Als
 
 def rmse(with_pred_df, rating_col_name = "rating", pred_col_name = "prediction"):
     """[calculate rmse of the prediction]
