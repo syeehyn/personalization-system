@@ -1,8 +1,8 @@
 {
-    "num_movie": 1000,
+    "num_movie": 2000,
     "num_user": 20000,
-    "user_threshold": 5,
-    "item_threshold": 100,
-    "op": "./data/",
+    "user_threshold": 100,
+    "item_threshold": 1000,
+    "op": "./downloads/",
     "random_seed": 0
 }
