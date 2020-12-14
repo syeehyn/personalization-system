@@ -19,3 +19,5 @@ def spark_session():
     spark = SparkSession(sc)
     print('Spark UI address {}'.format(spark.sparkContext.uiWebUrl))
     return spark
+
+
