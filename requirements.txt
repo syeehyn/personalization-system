@@ -11,6 +11,8 @@ bokeh
 pyspark
 tqdm
 psutil
-torch==1.6.0
-torchvision==0.7.0
 pytorch_widedeep
+# Torch
+--find-links https://download.pytorch.org/whl/torch_stable.html
+torch==1.6.0+cu101
+torchvision==0.7.0+cu101
