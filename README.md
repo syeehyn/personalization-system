@@ -1,14 +1,33 @@
 # IEOR 4571 Final Project
 
-This repository contains library code and experimental of Homework 2 of IEOR 4571 course in Columbia University.
+This repository contains an experiment design of Recommender System on Movielens Dataset.
 
 [Final Report](./notebook/final_report.ipynb)
 
 ----
 
+## Recommender Pipeline
+
+![Pipeline](./pipeline.png)
+
+
+
 ## Description of Content
 
-`
+``` bash
+├── LICENSE
+├── README.md
+├── data
+│   ├── model_results.tar.gz #model evaluation results
+│   ├── movies.csv #reference for genre information
+│   └── sample.tar.gz #the sample and sample train/test
+├── dockerfile #docker env when we use clusters
+├── notebook #final report directory
+│   └── final_report.ipynb
+├── requirements.txt #required libraries
+└── trained_model #trained torch model for wide and deep
+```
+
 ----
 
 ## Prerequisite and Getting Started
@@ -29,90 +48,11 @@ Then, you will see a named `personalization` kernel in your jupyter notebook env
 
 ----
 
-## ETL and Data Preprocess
-
-ETL and Data Preprocess are done with python file `main.py` to run the full ETL and Data Preprocess pipeline, just simply type following line:
-
-``` bash
-python main.py download sample train-test-split
-```
-
-Since the process is trivial, we have store our experimental sampled dataset under `/data/` directory.
-
-If you want to try different dataset, you may find an explanation of parameters below.
-
-### Download
-
-You can edit the parameter `url` and `fp` in the file `config/downloads.json` to download different dataset from Movielens. By default, we will download `ml-latest.zip` to `/downloads` directory. To proceed download action, run following line:
-
-``` bash
-python main.py download
-```
-
-### Sample
-
-You can edit the parameter for sample in the file `config/sample.json`.
-
-The explanation of parameters as follow:
-
-- `min_items`: number of minimum items to get from sample.
-- `min_users`: number of minimum users to get from sample.
-- `user_threshold`: a user should at least rate how many items in sample dataset.
-- `item_threshold`: an item should be at least rated by how many user in sample dataset.
-- `op`: directory to store sample data.
-- `random_seed`: random seed for experimental result.
-
-In our experimental dataset: we used following parameters:
-
-```json
-{
-    "min_items": 1000,
-    "min_users": 20000,
-    "user_threshold": 5,
-    "item_threshold": 100,
-    "op": "./data/raw",
-    "random_seed": 0
-}
-```
-
-Sampled data is already under directory of the repository: `data/processed/sample.csv`.
-
-To proceed sample action, run following line:
-
-``` bash
-python main.py sample
-```
-
-### Train-Test-Split
-
-To validate the robustness of our recommendation system, we need to cross validate our data. For splitting the train and test data, you can edit parameter in the file `config/split.json`.
-
-The explanation of parameters as follow:
-
-- `op`: the output directory of splitted data.
-- `seed`: the random seed of split in Pyspark.
-- `splits`: the list of training set ratio. [0.25] means creating a split for 25% training and 75% test dataset.
-
-In our experimental dataset: we used following parameters:
-
-```json
-{
-    "op": "./data/interim",
-    "seed": 0,
-    "splits": [0.25, 0.5, 0.75]
-}
-
-```
-
-To proceed train-test-split, run following line:
-
-```bash
-python main.py train-test-split
-```
-
-----
-
 ## Model and Recommender System
+
+- ALS via Pyspark
+- memory-based Collaborative  Filtering
+- Wide and Deep via Pytorch
 
 ----
 
