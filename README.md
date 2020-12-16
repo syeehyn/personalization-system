@@ -39,7 +39,7 @@ For simplicity, you can set up a python virtual environment with `conda` by foll
 ```bash
 conda create --name personalization python=3.8.5
 conda activate personalization
-pip install -r requirments.txt
+pip install -r requirements.txt
 python -m ipykernel install --user --name personalization
 conda deactivate
 ```
