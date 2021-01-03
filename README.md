@@ -1,4 +1,4 @@
-# IEOR 4571 Final Project
+# Personalization Recommender System
 
 This repository contains an experiment design of Recommender System on Movielens Dataset.
 
